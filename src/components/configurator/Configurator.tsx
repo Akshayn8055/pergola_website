@@ -18,6 +18,7 @@ export const Configurator = () => {
   const sceneRef = useRef<Scene3DHandle>(null);
   const {
     state,
+    pricing,
     setStructureType,
     updatePergola,
     updateDeck,
@@ -128,6 +129,7 @@ export const Configurator = () => {
       <div className="w-full lg:w-[360px] xl:w-[380px] h-[55vh] lg:h-full flex-shrink-0 border-l border-border/50 order-2 lg:order-2 shadow-[var(--shadow-lg)] lg:shadow-none z-10">
         <ConfigPanel
           config={state}
+          pricing={pricing}
           onUpdatePergola={updatePergola}
           onUpdateDeck={updateDeck}
           onNextStep={nextStep}

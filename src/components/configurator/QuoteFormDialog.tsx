@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 import { createQuote, getNextQuoteNumber, updateQuote, updateQuoteByToken, uploadDesignImage } from '@/lib/quotesStore';
 import { calculatePriceBreakdown } from '@/lib/priceCalculator';
+import type { PricingConfig } from '@/lib/pricingConfig';
 import { generateQuotePDF } from '@/lib/generateQuotePDF';
 import { supabase } from '@/integrations/supabase/client';
 import { formatCurrency } from '@/lib/businessConfig';
@@ -30,6 +31,7 @@ interface QuoteFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   config: ConfiguratorState;
+  pricing: PricingConfig;
   onCaptureDesign?: () => string | null;
   editMode?: boolean;
   editQuoteId?: string;
@@ -40,7 +42,7 @@ interface FormData {
   name: string;
   phone: string;
   email: string;
-  zipCode: string;
+  postcode: string;
   address: string;
   projectType: string;
   budget: string;
@@ -48,18 +50,18 @@ interface FormData {
   description: string;
 }
 
-export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, editMode, editQuoteId, editToken }: QuoteFormDialogProps) => {
+export const QuoteFormDialog = ({ open, onOpenChange, config, pricing, onCaptureDesign, editMode, editQuoteId, editToken }: QuoteFormDialogProps) => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState<FormData>({
-    name: '', phone: '', email: '', zipCode: '', address: '',
+    name: '', phone: '', email: '', postcode: '', address: '',
     projectType: '', budget: '', timeline: '', description: '',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.phone || !formData.email || !formData.zipCode || !formData.projectType || !formData.budget || !formData.timeline) {
+    if (!formData.name || !formData.phone || !formData.email || !formData.postcode || !formData.projectType || !formData.budget || !formData.timeline) {
       toast({ title: "Missing required fields", description: "Please fill in all required fields.", variant: "destructive" });
       return;
     }
@@ -72,7 +74,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
     setIsSubmitting(true);
 
     const designImage = onCaptureDesign ? onCaptureDesign() : null;
-    const priceBreakdown = calculatePriceBreakdown(config);
+    const priceBreakdown = calculatePriceBreakdown(config, pricing);
     const avgPrice = (config.estimatedPrice.min + config.estimatedPrice.max) / 2;
 
     const configFields = {
@@ -205,7 +207,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
       return;
     }
 
-    setFormData({ name: '', phone: '', email: '', zipCode: '', address: '', projectType: '', budget: '', timeline: '', description: '' });
+    setFormData({ name: '', phone: '', email: '', postcode: '', address: '', projectType: '', budget: '', timeline: '', description: '' });
   };
 
   const formatDimension = (mm: number) => `${(mm / 1000).toFixed(2)}m`;
@@ -274,7 +276,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
               <Input
                 id="phone"
                 type="tel"
-                placeholder="(555) 123-4567"
+                placeholder="0412 345 678"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 required
@@ -295,12 +297,12 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="zipCode">Zip Code *</Label>
+              <Label htmlFor="postcode">Postcode *</Label>
               <Input
-                id="zipCode"
-                placeholder="78701"
-                value={formData.zipCode}
-                onChange={(e) => setFormData({ ...formData, zipCode: e.target.value })}
+                id="postcode"
+                placeholder="2000"
+                value={formData.postcode}
+                onChange={(e) => setFormData({ ...formData, postcode: e.target.value })}
                 required
               />
             </div>
@@ -310,7 +312,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
             <Label htmlFor="address">Property Address</Label>
             <Input
               id="address"
-              placeholder="123 Main St, Austin, TX"
+              placeholder="123 Example Street, Sydney NSW"
               value={formData.address}
               onChange={(e) => setFormData({ ...formData, address: e.target.value })}
             />
@@ -396,7 +398,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
           </Button>
 
           <p className="text-xs text-muted-foreground text-center">
-            By submitting, you agree to receive calls and texts about your project. 
+            By submitting, you agree to be contacted about your project. 
             We respect your privacy and never share your information.
           </p>
         </form>

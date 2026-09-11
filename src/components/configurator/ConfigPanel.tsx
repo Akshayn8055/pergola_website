@@ -36,6 +36,7 @@ import {
 } from 'lucide-react';
 import { QuoteFormDialog } from './QuoteFormDialog';
 import { formatCurrency } from '@/lib/businessConfig';
+import type { PricingConfig } from '@/lib/pricingConfig';
 
 // Material images
 import woodCedarImg from '@/assets/materials/wood-cedar.jpg';
@@ -46,6 +47,7 @@ import compositeBrownImg from '@/assets/materials/composite-brown.jpg';
 import ledStripsImg from '@/assets/lighting/led-strips.jpg';
 import spotlightsImg from '@/assets/lighting/spotlights.jpg';
 import ceilingFanImg from '@/assets/lighting/ceiling-fan.jpg';
+import heatersImg from '@/assets/lighting/heaters.jpg';
 
 // Pergola style images (mounting types only)
 
@@ -59,6 +61,7 @@ interface ConfigPanelProps {
   onToggleDeck: (include: boolean) => void;
   onReset: () => void;
   onCaptureDesign?: () => string | null;
+  pricing: PricingConfig;
   editMode?: boolean;
   editQuoteId?: string;
   editToken?: string;
@@ -137,6 +140,7 @@ export const ConfigPanel = ({
   onToggleDeck,
   onReset,
   onCaptureDesign,
+  pricing,
   editMode,
   editQuoteId,
   editToken,
@@ -1409,9 +1413,10 @@ export const ConfigPanel = ({
     }
 
     const lightingOptions = [
-      { key: 'ledStrips', label: 'LED Strip Lighting', description: 'Ambient beam lighting', price: '+A$400', image: ledStripsImg },
-      { key: 'spotlights', label: 'Spotlights', description: 'Focused downlighting', price: '+A$300', image: spotlightsImg },
-      { key: 'ceilingFan', label: 'Ceiling Fan', description: 'Circulate air and stay cool', price: '+A$350', image: ceilingFanImg },
+      { key: 'ledStrips', label: 'LED Strip Lighting', description: 'Ambient beam lighting', price: `+${formatCurrency(pricing.extras.ledStrips)}`, image: ledStripsImg },
+      { key: 'spotlights', label: 'Spotlights', description: 'Focused downlighting', price: `+${formatCurrency(pricing.extras.spotlights)}`, image: spotlightsImg },
+      { key: 'ceilingFan', label: 'Ceiling Fan', description: 'Circulate air and stay cool', price: `+${formatCurrency(pricing.extras.ceilingFan)}`, image: ceilingFanImg },
+      { key: 'heaters', label: 'Outdoor Heaters', description: 'Extend comfort into cooler evenings', price: `+${formatCurrency(pricing.extras.heaters)}`, image: heatersImg },
     ];
 
     return (
@@ -1777,6 +1782,7 @@ export const ConfigPanel = ({
         open={showQuoteForm} 
         onOpenChange={setShowQuoteForm}
         config={config}
+        pricing={pricing}
         onCaptureDesign={onCaptureDesign}
         editMode={editMode}
         editQuoteId={editQuoteId}

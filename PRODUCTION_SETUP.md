@@ -18,13 +18,16 @@ VITE_QUOTE_VALIDITY_DAYS
 
 ## Supabase database
 
-Run the latest migration in Supabase SQL Editor if the CLI is not available:
+Run the latest migrations in Supabase SQL Editor if the CLI is not available:
 
 ```txt
 supabase/migrations/20260911171000_secure_production_quote_flow.sql
+supabase/migrations/20260911175500_grant_admin_table_access.sql
+supabase/migrations/20260911180500_remove_demo_quote_seed_data.sql
+supabase/migrations/20260911182000_add_admin_pricing_settings.sql
 ```
 
-This closes the public demo RLS policies, adds token-safe quote RPCs, and assigns admin role to `neel@scaleaura.info` if that auth user already exists.
+This closes the public demo RLS policies, adds token-safe quote RPCs, removes demo quote rows, creates admin-only app settings, and assigns admin role to `neel@scaleaura.info` if that auth user already exists.
 
 ## Admin user
 

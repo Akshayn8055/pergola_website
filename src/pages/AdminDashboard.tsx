@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { addActivity, ensurePipeline, getActivities, getPipelines, STAGES, updatePipeline, type LeadActivity, type LeadPipeline } from "@/lib/pipelineStore";
 import { deleteQuote, getQuotes, updateQuote, type Quote } from "@/lib/quotesStore";
 import { formatCurrency } from "@/lib/businessConfig";
+import { DEFAULT_PRICING_CONFIG, getPricingConfig, savePricingConfig } from "@/lib/pricingConfig";
 import { supabase } from "@/integrations/supabase/client";
 
 const statusOptions = ["Quote", "Quote sent", "Quote confirmed", "Declined", "Qualified", "Archived"];
@@ -23,6 +24,7 @@ export default function AdminDashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [note, setNote] = useState("");
+  const [pricingDraft, setPricingDraft] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
@@ -41,9 +43,10 @@ export default function AdminDashboard() {
 
   const loadDashboard = async () => {
     setLoading(true);
-    const [quotesData, pipelineData] = await Promise.all([getQuotes(), getPipelines()]);
+    const [quotesData, pipelineData, pricingData] = await Promise.all([getQuotes(), getPipelines(), getPricingConfig()]);
     setQuotes(quotesData);
     setPipelines(pipelineData);
+    setPricingDraft(JSON.stringify(pricingData, null, 2));
     setSelectedId((current) => current || quotesData[0]?.id || null);
     setLoading(false);
   };
@@ -126,6 +129,18 @@ export default function AdminDashboard() {
       setSelectedId(null);
       toast({ title: "Quote deleted" });
     }
+  };
+
+  const savePricing = async () => {
+    setSaving(true);
+    try {
+      const parsed = JSON.parse(pricingDraft);
+      const saved = await savePricingConfig(parsed);
+      toast({ title: saved ? "Pricing saved" : "Pricing save failed", variant: saved ? "default" : "destructive" });
+    } catch {
+      toast({ title: "Invalid pricing JSON", description: "Fix the JSON format before saving.", variant: "destructive" });
+    }
+    setSaving(false);
   };
 
   if (loading) {
@@ -270,6 +285,29 @@ export default function AdminDashboard() {
                       </div>
                     ))}
                   </div>
+                </div>
+
+                <div className="rounded-lg border bg-card p-5">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="font-semibold">Pricing Settings</h3>
+                      <p className="text-sm text-muted-foreground">Rates are AUD and update future configurator estimates.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button type="button" variant="outline" onClick={() => setPricingDraft(JSON.stringify(DEFAULT_PRICING_CONFIG, null, 2))} disabled={saving}>
+                        Reset Defaults
+                      </Button>
+                      <Button type="button" onClick={savePricing} disabled={saving}>
+                        Save Pricing
+                      </Button>
+                    </div>
+                  </div>
+                  <Textarea
+                    value={pricingDraft}
+                    onChange={(event) => setPricingDraft(event.target.value)}
+                    className="min-h-[280px] font-mono text-xs"
+                    spellCheck={false}
+                  />
                 </div>
               </div>
 
