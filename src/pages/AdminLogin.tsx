@@ -25,25 +25,28 @@ export default function AdminLogin() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setSubmitting(true);
-    const { error, isAdmin: signedInAsAdmin } = await signIn(email.trim(), password);
-    setSubmitting(false);
+    try {
+      const { error, isAdmin: signedInAsAdmin } = await signIn(email.trim(), password);
 
-    if (error) {
-      toast({ title: "Login failed", description: error, variant: "destructive" });
-      return;
+      if (error) {
+        toast({ title: "Login failed", description: error, variant: "destructive" });
+        return;
+      }
+
+      if (!signedInAsAdmin) {
+        toast({
+          title: "Admin access missing",
+          description: "The login worked, but this user has not been assigned the admin role in Supabase.",
+          variant: "destructive",
+        });
+        await signOut();
+        return;
+      }
+
+      navigate((location.state as { from?: string } | null)?.from || "/admin", { replace: true });
+    } finally {
+      setSubmitting(false);
     }
-
-    if (!signedInAsAdmin) {
-      toast({
-        title: "Admin access missing",
-        description: "The login worked, but this user has not been assigned the admin role in Supabase.",
-        variant: "destructive",
-      });
-      await signOut();
-      return;
-    }
-
-    navigate((location.state as { from?: string } | null)?.from || "/admin", { replace: true });
   };
 
   return (

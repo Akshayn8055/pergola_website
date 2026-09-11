@@ -20,59 +20,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const checkAdmin = async (userId: string) => {
-    const { data } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
-    const admin = !!data;
-    setIsAdmin(admin);
-    return admin;
+    try {
+      const { data } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "admin")
+        .maybeSingle();
+      const admin = !!data;
+      setIsAdmin(admin);
+      return admin;
+    } catch (err) {
+      console.error("Failed to check admin role:", err);
+      setIsAdmin(false);
+      return false;
+    }
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let active = true;
+
+    const applySession = async (session: Session | null) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      try {
         if (session?.user) {
           await checkAdmin(session.user.id);
         } else {
           setIsAdmin(false);
         }
-        setLoading(false);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        applySession(session);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const init = async () => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await checkAdmin(session.user.id);
-        }
-        setLoading(false);
-      };
-      init();
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => applySession(session))
+      .catch(() => {
+        if (active) setLoading(false);
+      });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      active = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) {
-      setLoading(false);
-      return { error: error?.message ?? "Login failed", isAdmin: false };
-    }
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error || !data.user) {
+        return { error: error?.message ?? "Login failed", isAdmin: false };
+      }
 
-    setSession(data.session);
-    setUser(data.user);
-    const admin = await checkAdmin(data.user.id);
-    setLoading(false);
-    return { error: null, isAdmin: admin };
+      setSession(data.session);
+      setUser(data.user);
+      const admin = await checkAdmin(data.user.id);
+      return { error: null, isAdmin: admin };
+    } catch (err) {
+      console.error("Sign in failed:", err);
+      return { error: err instanceof Error ? err.message : "Login failed", isAdmin: false };
+    } finally {
+      setLoading(false);
+    }
   };
 
   const signOut = async () => {
