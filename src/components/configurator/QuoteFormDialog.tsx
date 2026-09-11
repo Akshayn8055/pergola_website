@@ -20,10 +20,11 @@ import {
 import { ConfiguratorState } from '@/types/configurator';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import { createQuote, getNextQuoteNumber, updateQuote, uploadDesignImage } from '@/lib/quotesStore';
+import { createQuote, getNextQuoteNumber, updateQuote, updateQuoteByToken, uploadDesignImage } from '@/lib/quotesStore';
 import { calculatePriceBreakdown } from '@/lib/priceCalculator';
 import { generateQuotePDF } from '@/lib/generateQuotePDF';
 import { supabase } from '@/integrations/supabase/client';
+import { formatCurrency } from '@/lib/businessConfig';
 
 interface QuoteFormDialogProps {
   open: boolean;
@@ -58,7 +59,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.name || !formData.phone || !formData.email || !formData.zipCode) {
+    if (!formData.name || !formData.phone || !formData.email || !formData.zipCode || !formData.projectType || !formData.budget || !formData.timeline) {
       toast({ title: "Missing required fields", description: "Please fill in all required fields.", variant: "destructive" });
       return;
     }
@@ -100,7 +101,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
 
     if (editMode && editQuoteId) {
       // Update existing quote
-      savedQuote = await updateQuote(editQuoteId, {
+      const updatePayload = {
         customer_name: formData.name,
         customer_email: formData.email,
         customer_address: formData.address || null,
@@ -114,7 +115,10 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
         material: config.structureType === 'deck' ? config.deck.material : config.pergola?.material || null,
         style: config.structureType === 'deck' ? config.deck.shape : config.pergola?.type || null,
         ...configFields,
-      } as any);
+      } as any;
+      savedQuote = editToken
+        ? await updateQuoteByToken(editQuoteId, editToken, updatePayload)
+        : await updateQuote(editQuoteId, updatePayload);
     } else {
       // Create new quote
       const quoteNumber = await getNextQuoteNumber();
@@ -150,7 +154,11 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
     if (savedQuote && designImage) {
       const imageUrl = await uploadDesignImage(savedQuote.id, designImage);
       if (imageUrl) {
-        await updateQuote(savedQuote.id, { design_image: imageUrl } as any);
+        if (savedQuote.edit_token) {
+          await updateQuoteByToken(savedQuote.id, savedQuote.edit_token, { design_image: imageUrl } as any);
+        } else {
+          await updateQuote(savedQuote.id, { design_image: imageUrl } as any);
+        }
         savedQuote.design_image = imageUrl;
       }
     }
@@ -158,35 +166,26 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
     // Generate PDF
     if (savedQuote) {
       try {
-        const pdfUrl = await generateQuotePDF(savedQuote);
+        const pdfUrl = await generateQuotePDF(savedQuote, savedQuote.edit_token || undefined);
         if (pdfUrl) savedQuote.pdf_url = pdfUrl;
       } catch (err) {
         console.error("PDF generation failed:", err);
       }
     }
 
-    // Call GHL webhook
+    // Send transactional emails through the Supabase email function.
     if (savedQuote) {
       try {
         const estimateUrl = `${window.location.origin}/estimate/${savedQuote.id}?token=${savedQuote.edit_token}`;
-        await supabase.functions.invoke("ghl-webhook", {
+        await supabase.functions.invoke("send-email", {
           body: {
             event: editMode ? "quote_updated" : "quote_created",
-            quote_id: savedQuote.id,
-            customer_name: savedQuote.customer_name,
-            customer_email: savedQuote.customer_email,
-            customer_phone: formData.phone,
+            quote: savedQuote,
             estimate_url: estimateUrl,
-            design_image: savedQuote.design_image,
-            pdf_url: savedQuote.pdf_url,
-            pergola_type: config.pergola?.type,
-            material: config.pergola?.material,
-            dimensions: savedQuote.dimensions,
-            price: `€${priceBreakdown.total_price.toLocaleString()}`,
           },
         });
       } catch (err) {
-        console.error("GHL webhook failed:", err);
+        console.error("Email notification failed:", err);
       }
     }
 
@@ -254,7 +253,7 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
           )}
           <div className="flex justify-between font-medium pt-2 border-t mt-2">
             <span>Estimated Price:</span>
-            <span className="text-primary">€{config.estimatedPrice.min.toLocaleString()} - €{config.estimatedPrice.max.toLocaleString()}</span>
+            <span className="text-primary">{formatCurrency(config.estimatedPrice.min)} - {formatCurrency(config.estimatedPrice.max)}</span>
           </div>
         </div>
 
@@ -345,11 +344,11 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, onCaptureDesign, e
                   <SelectValue placeholder="Select your budget" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="under-10k">Under €10,000</SelectItem>
-                  <SelectItem value="10k-20k">€10,000 - €20,000</SelectItem>
-                  <SelectItem value="20k-35k">€20,000 - €35,000</SelectItem>
-                  <SelectItem value="35k-50k">€35,000 - €50,000</SelectItem>
-                  <SelectItem value="over-50k">Over €50,000</SelectItem>
+                  <SelectItem value="under-10k">Under A$10,000</SelectItem>
+                  <SelectItem value="10k-20k">A$10,000 - A$20,000</SelectItem>
+                  <SelectItem value="20k-35k">A$20,000 - A$35,000</SelectItem>
+                  <SelectItem value="35k-50k">A$35,000 - A$50,000</SelectItem>
+                  <SelectItem value="over-50k">Over A$50,000</SelectItem>
                 </SelectContent>
               </Select>
             </div>

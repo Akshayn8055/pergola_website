@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useSearchParams, useNavigate } from "react-router-dom";
-import { getQuoteByToken, updateQuote, type Quote } from "@/lib/quotesStore";
+import { getQuoteByToken, updateQuoteByToken, type Quote } from "@/lib/quotesStore";
 import { generateQuotePDF } from "@/lib/generateQuotePDF";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Check, X, Loader2, Download, Pencil, User, MapPin, Phone, Mail, Calendar, DollarSign } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCurrency } from "@/lib/businessConfig";
 
 export default function CustomerEstimate() {
   const { id } = useParams<{ id: string }>();
@@ -37,18 +38,14 @@ export default function CustomerEstimate() {
     const updates: any = action === "confirm"
       ? { status: "Quote confirmed", is_qualified: true }
       : { status: "Declined" };
-    await updateQuote(quote.id, updates);
+    const updatedQuote = await updateQuoteByToken(quote.id, token, updates);
 
     try {
-      await supabase.functions.invoke("ghl-webhook", {
+      await supabase.functions.invoke("send-email", {
         body: {
           event: action === "confirm" ? "quote_confirmed" : "quote_declined",
-          quote_id: quote.id,
+          quote: updatedQuote || quote,
           status: action === "confirm" ? "confirmed" : "declined",
-          customer_name: quote.customer_name,
-          customer_email: quote.customer_email,
-          customer_phone: quote.customer_phone,
-          price: quote.total_price || quote.price,
         },
       });
     } catch {}
@@ -65,7 +62,7 @@ export default function CustomerEstimate() {
       if (quote.pdf_url) {
         window.open(quote.pdf_url, "_blank");
       } else {
-        await generateQuotePDF(quote);
+        await generateQuotePDF(quote, token || undefined);
         toast({ title: "PDF generated and downloading" });
       }
     } catch {
@@ -117,7 +114,7 @@ export default function CustomerEstimate() {
     );
   }
 
-  const fmt = (v: number) => `€${v.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+  const fmt = (v: number) => formatCurrency(v);
 
   return (
     <div className="min-h-screen bg-muted/30">

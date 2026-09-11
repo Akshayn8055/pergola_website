@@ -1,0 +1,65 @@
+# Production Setup
+
+## Vercel environment variables
+
+This is a Vite app. Vercel's Supabase integration may create `NEXT_PUBLIC_*` variables; the app supports those, but these `VITE_*` variables are the clean preferred names:
+
+```txt
+VITE_SUPABASE_URL
+VITE_SUPABASE_ANON_KEY
+VITE_BUSINESS_NAME
+VITE_CLIENT_NAME
+VITE_SITE_URL
+VITE_CONTACT_EMAIL
+VITE_CONTACT_PHONE
+VITE_SERVICE_AREA
+VITE_QUOTE_VALIDITY_DAYS
+```
+
+## Supabase database
+
+Run the latest migration in Supabase SQL Editor if the CLI is not available:
+
+```txt
+supabase/migrations/20260911171000_secure_production_quote_flow.sql
+```
+
+This closes the public demo RLS policies, adds token-safe quote RPCs, and assigns admin role to `neel@scaleaura.info` if that auth user already exists.
+
+## Admin user
+
+Create the admin user in Supabase Authentication:
+
+1. Supabase Dashboard
+2. Authentication
+3. Users
+4. Add user
+5. Email: `neel@scaleaura.info`
+6. Mark the email as confirmed
+7. Run the production migration after the user exists
+
+## Gmail / Google Workspace SMTP
+
+For the simplest no-paid-API email setup, use a Google Workspace app password.
+
+1. In the Google account, enable 2-Step Verification.
+2. Open Google Account security settings.
+3. Create an app password for Mail.
+4. Add these Supabase Edge Function secrets:
+
+```txt
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_USER=neel@scaleaura.info
+SMTP_PASS=your-google-app-password
+SMTP_FROM=Pergola by Scale Aura <neel@scaleaura.info>
+ADMIN_NOTIFICATION_EMAIL=neel@scaleaura.info
+```
+
+Then deploy the function:
+
+```sh
+supabase functions deploy send-email --project-ref mthuffvruetwheuvljjd
+```
+
+If using the Supabase Dashboard instead of CLI, create/deploy the `send-email` function with the code from `supabase/functions/send-email/index.ts` and add the same secrets.

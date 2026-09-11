@@ -1,6 +1,7 @@
 import jsPDF from "jspdf";
-import { type Quote, uploadQuotePDF, updateQuote } from "./quotesStore";
+import { type Quote, uploadQuotePDF, updateQuote, updateQuoteByToken } from "./quotesStore";
 import { getEstimateDoc, computeTotals } from "./estimateModel";
+import { formatCurrency } from "./businessConfig";
 
 const MARGIN = 20;
 const PAGE_W = 210;
@@ -34,7 +35,7 @@ function addSectionTitle(pdf: jsPDF, y: number, title: string): number {
   return y + 10;
 }
 
-export async function generateQuotePDF(quote: Quote): Promise<string | null> {
+export async function generateQuotePDF(quote: Quote, editToken?: string): Promise<string | null> {
   try {
     const pdf = new jsPDF("p", "mm", "a4");
 
@@ -146,7 +147,7 @@ export async function generateQuotePDF(quote: Quote): Promise<string | null> {
     pdf.addPage();
     addHeader(pdf, "Price Breakdown");
     y = 55;
-    const fmt = (v: number) => `€${v.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    const fmt = (v: number) => formatCurrency(v);
 
     // 1.1 Base Structure
     y = addSectionTitle(pdf, y, "1.1  Base Structure");
@@ -219,7 +220,7 @@ export async function generateQuotePDF(quote: Quote): Promise<string | null> {
     y = 55;
     const services = [
       { title: "Site Survey", desc: "A professional surveyor will visit your property to assess the installation area." },
-      { title: "UK Manufacture", desc: "Your pergola will be manufactured in the UK using premium materials." },
+      { title: "Australian Outdoor Living Products", desc: "Your project will be specified around suitable patio, pergola, deck, blind or carport systems." },
       { title: "Expert Installation", desc: "Our certified team will install your structure with full care and precision." },
       { title: "10 Year Guarantee", desc: "All our structures come with a comprehensive 10-year guarantee." },
     ];
@@ -240,7 +241,11 @@ export async function generateQuotePDF(quote: Quote): Promise<string | null> {
     const pdfBlob = pdf.output("blob");
     const pdfUrl = await uploadQuotePDF(quote.id, pdfBlob);
     if (pdfUrl) {
-      await updateQuote(quote.id, { pdf_url: pdfUrl } as any);
+      if (editToken) {
+        await updateQuoteByToken(quote.id, editToken, { pdf_url: pdfUrl } as any);
+      } else {
+        await updateQuote(quote.id, { pdf_url: pdfUrl } as any);
+      }
     }
     return pdfUrl;
   } catch (err) {

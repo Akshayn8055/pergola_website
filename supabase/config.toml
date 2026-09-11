@@ -1,4 +1,4 @@
-project_id = "arrjtsashykfbrtaznml"
+project_id = "mthuffvruetwheuvljjd"
 
-[functions.ghl-webhook]
+[functions.send-email]
 verify_jwt = false

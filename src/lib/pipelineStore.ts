@@ -1,8 +1,4 @@
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://arrjtsashykfbrtaznml.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycmp0c2FzaHlrZmJydGF6bm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NzIwODgsImV4cCI6MjA4ODI0ODA4OH0.MS7aG7Sc4_p-Eh5ldwv2gDmx8eW17GnpOnoUJ_LZMAg";
+import { supabase } from "@/integrations/supabase/client";
 
 export const STAGES = ["New", "Qualified", "Consultation", "Committed"] as const;
 export type Stage = (typeof STAGES)[number];
@@ -30,42 +26,24 @@ export type LeadActivity = {
   created_at: string;
 };
 
-async function rest<T>(path: string, init?: RequestInit): Promise<T | null> {
-  try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
-      ...init,
-      headers: {
-        apikey: SUPABASE_PUBLISHABLE_KEY,
-        authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-        "content-type": "application/json",
-        prefer: "return=representation",
-        ...(init?.headers || {}),
-      },
-    });
-    if (!res.ok) {
-      console.error("pipeline request failed", path, res.status, await res.text());
-      return null;
-    }
-    if (res.status === 204) return null;
-    return (await res.json()) as T;
-  } catch (e) {
-    console.error("pipeline request error", path, e);
-    return null;
-  }
-}
-
 export async function getPipelines(): Promise<LeadPipeline[]> {
-  return (await rest<LeadPipeline[]>("lead_pipeline?select=*")) || [];
+  const { data, error } = await supabase.from("lead_pipeline").select("*");
+  if (error) {
+    console.error("Failed to fetch pipelines:", error);
+    return [];
+  }
+  return (data || []) as LeadPipeline[];
 }
 
 export async function ensurePipeline(quoteId: string): Promise<LeadPipeline | null> {
-  const existing = await rest<LeadPipeline[]>(`lead_pipeline?select=*&quote_id=eq.${quoteId}`);
-  if (existing && existing.length) return existing[0];
-  const created = await rest<LeadPipeline[]>("lead_pipeline", {
-    method: "POST",
-    body: JSON.stringify({ quote_id: quoteId }),
-  });
-  return created?.[0] || null;
+  const { data: existing } = await supabase.from("lead_pipeline").select("*").eq("quote_id", quoteId).maybeSingle();
+  if (existing) return existing as LeadPipeline;
+  const { data, error } = await supabase.from("lead_pipeline").insert({ quote_id: quoteId }).select().single();
+  if (error) {
+    console.error("Failed to create pipeline:", error);
+    return null;
+  }
+  return data as LeadPipeline;
 }
 
 export async function updatePipeline(
@@ -73,19 +51,25 @@ export async function updatePipeline(
   updates: Partial<Omit<LeadPipeline, "id" | "quote_id" | "created_at" | "updated_at">>
 ): Promise<LeadPipeline | null> {
   await ensurePipeline(quoteId);
-  const updated = await rest<LeadPipeline[]>(`lead_pipeline?quote_id=eq.${quoteId}`, {
-    method: "PATCH",
-    body: JSON.stringify(updates),
-  });
-  return updated?.[0] || null;
+  const { data, error } = await supabase.from("lead_pipeline").update(updates).eq("quote_id", quoteId).select().single();
+  if (error) {
+    console.error("Failed to update pipeline:", error);
+    return null;
+  }
+  return data as LeadPipeline;
 }
 
 export async function getActivities(quoteId: string): Promise<LeadActivity[]> {
-  return (
-    (await rest<LeadActivity[]>(
-      `lead_activities?select=*&quote_id=eq.${quoteId}&order=created_at.desc`
-    )) || []
-  );
+  const { data, error } = await supabase
+    .from("lead_activities")
+    .select("*")
+    .eq("quote_id", quoteId)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Failed to fetch activities:", error);
+    return [];
+  }
+  return (data || []) as LeadActivity[];
 }
 
 export async function addActivity(
@@ -93,11 +77,12 @@ export async function addActivity(
   type: string,
   body: string
 ): Promise<LeadActivity | null> {
-  const created = await rest<LeadActivity[]>("lead_activities", {
-    method: "POST",
-    body: JSON.stringify({ quote_id: quoteId, type, body }),
-  });
-  return created?.[0] || null;
+  const { data, error } = await supabase.from("lead_activities").insert({ quote_id: quoteId, type, body }).select().single();
+  if (error) {
+    console.error("Failed to create activity:", error);
+    return null;
+  }
+  return data as LeadActivity;
 }
 
 export function nextStage(stage: string): Stage | null {

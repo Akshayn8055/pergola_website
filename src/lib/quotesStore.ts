@@ -1,10 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "https://arrjtsashykfbrtaznml.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY =
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
-  import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycmp0c2FzaHlrZmJydGF6bm1sIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI2NzIwODgsImV4cCI6MjA4ODI0ODA4OH0.MS7aG7Sc4_p-Eh5ldwv2gDmx8eW17GnpOnoUJ_LZMAg";
 const QUOTES_CACHE_KEY = "pergola-dashboard-quotes-cache";
 
 export type Quote = {
@@ -73,22 +68,6 @@ function getCachedQuotes(): Quote[] {
   }
 }
 
-async function getQuotesViaRest(): Promise<Quote[]> {
-  const response = await fetch(`${SUPABASE_URL}/rest/v1/quotes?select=*&order=created_at.desc`, {
-    headers: {
-      apikey: SUPABASE_PUBLISHABLE_KEY,
-      authorization: `Bearer ${SUPABASE_PUBLISHABLE_KEY}`,
-      "accept-profile": "public",
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`Quotes REST fallback failed with ${response.status}`);
-  }
-
-  return (await response.json()) as Quote[];
-}
-
 export async function getQuotes(): Promise<Quote[]> {
   try {
     const { data, error } = await supabase
@@ -102,17 +81,9 @@ export async function getQuotes(): Promise<Quote[]> {
     cacheQuotes(quotes);
     return quotes;
   } catch (primaryError) {
-    console.warn("Primary quotes fetch failed, retrying direct REST request:", primaryError);
-
-    try {
-      const quotes = await getQuotesViaRest();
-      cacheQuotes(quotes);
-      return quotes;
-    } catch (fallbackError) {
-      const cached = getCachedQuotes();
-      console.error("Failed to fetch quotes:", { primaryError, fallbackError });
-      return cached;
-    }
+    const cached = getCachedQuotes();
+    console.error("Failed to fetch quotes:", primaryError);
+    return cached;
   }
 }
 
@@ -127,6 +98,16 @@ export async function getQuoteById(id: string): Promise<Quote | null> {
 }
 
 export async function getQuoteByToken(id: string, token: string): Promise<Quote | null> {
+  const rpc = await (supabase.rpc as any)("get_quote_by_token", {
+    quote_id_input: id,
+    token_input: token,
+  });
+
+  if (!rpc.error && rpc.data) {
+    const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+    return (row || null) as Quote | null;
+  }
+
   const { data, error } = await supabase
     .from("quotes")
     .select("*")
@@ -140,6 +121,12 @@ export async function getQuoteByToken(id: string, token: string): Promise<Quote 
 export async function createQuote(
   input: Omit<Quote, "id" | "created_at" | "edit_token" | "pdf_url" | "is_qualified">
 ): Promise<Quote | null> {
+  const rpc = await (supabase.rpc as any)("create_public_quote", { payload: input });
+  if (!rpc.error && rpc.data) {
+    const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+    return (row || null) as Quote | null;
+  }
+
   const { data, error } = await supabase
     .from("quotes")
     .insert({
@@ -190,6 +177,32 @@ export async function createQuote(
     .single();
   if (error) {
     console.error("Failed to create quote:", error);
+    return null;
+  }
+  return data as unknown as Quote;
+}
+
+export async function updateQuoteByToken(id: string, token: string, updates: Partial<Quote>): Promise<Quote | null> {
+  const rpc = await (supabase.rpc as any)("update_quote_by_token", {
+    quote_id_input: id,
+    token_input: token,
+    payload: updates,
+  });
+
+  if (!rpc.error && rpc.data) {
+    const row = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+    return (row || null) as Quote | null;
+  }
+
+  const { data, error } = await supabase
+    .from("quotes")
+    .update(updates as any)
+    .eq("id", id)
+    .filter("edit_token", "eq", token)
+    .select()
+    .single();
+  if (error) {
+    console.error("Failed to update token quote:", error);
     return null;
   }
   return data as unknown as Quote;

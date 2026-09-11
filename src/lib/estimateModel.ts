@@ -1,4 +1,5 @@
 import type { Quote } from "./quotesStore";
+import { BUSINESS_CONFIG } from "./businessConfig";
 
 export type EstimateSubItem = {
   id: string;
@@ -66,7 +67,7 @@ const fmtDate = (d: Date) =>
 
 export function buildDefaultEstimate(quote: Quote): EstimateDoc {
   const created = new Date(quote.created_at);
-  const validUntil = new Date(created.getTime() + 14 * 86400000);
+  const validUntil = new Date(created.getTime() + BUSINESS_CONFIG.quoteValidityDays * 86400000);
 
   const sections: EstimateSection[] = [];
 
@@ -170,7 +171,7 @@ export function buildDefaultEstimate(quote: Quote): EstimateDoc {
 
   return {
     branding: {
-      companyName: "PERGOLA DESIGNS",
+      companyName: BUSINESS_CONFIG.clientName.toUpperCase(),
       tagline: "PREMIUM OUTDOOR LIVING",
       heroImage: "",
     },
@@ -187,22 +188,22 @@ export function buildDefaultEstimate(quote: Quote): EstimateDoc {
     },
     salesRep: {
       name: quote.sales_rep || "Admin",
-      email: quote.sales_rep_email || "admin@pergola.com",
+      email: quote.sales_rep_email || BUSINESS_CONFIG.contactEmail,
     },
     mainProduct: {
       name: `${quote.structure_type || "Pergola"} ${quote.style || ""}`.trim(),
       unitPrice: quote.price || 0,
       quantity: 1,
       discount: "",
-      vatPct: 20,
+      vatPct: 10,
     },
     sections,
     note: "This document represents a preliminary estimate based on your current configuration. Following a FREE site survey and design consultation a formal detailed offer will be prepared for your consideration.",
     included: [
       "Detailed site survey & design consultation",
-      "Precision manufacture at our production facility",
-      "Expert installation by our own salaried installers",
-      "Up to 10-year guarantee for complete peace of mind",
+      "Product selection suited to Sydney outdoor conditions",
+      "Expert installation by trained installation teams",
+      "Warranty-backed workmanship and product systems",
     ],
     totals: {
       subtotalOverride: null,

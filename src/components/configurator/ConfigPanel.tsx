@@ -35,6 +35,7 @@ import {
   DoorClosed,
 } from 'lucide-react';
 import { QuoteFormDialog } from './QuoteFormDialog';
+import { formatCurrency } from '@/lib/businessConfig';
 
 // Material images
 import woodCedarImg from '@/assets/materials/wood-cedar.jpg';
@@ -159,7 +160,7 @@ export const ConfigPanel = ({
   }, [config.pergola.type, config.pergola.mounting, onUpdatePergola]);
 
   const formatDimension = (mm: number) => `${(mm / 1000).toFixed(2)}m`;
-  const formatPrice = (price: number) => `$${price.toLocaleString()}`;
+  const formatPrice = (price: number) => formatCurrency(price);
 
   // Type step - Structure type selection (this is shown at step 0, before structure is chosen)
   const renderTypeStep = () => {
@@ -1408,9 +1409,9 @@ export const ConfigPanel = ({
     }
 
     const lightingOptions = [
-      { key: 'ledStrips', label: 'LED Strip Lighting', description: 'Ambient beam lighting', price: '+$400', image: ledStripsImg },
-      { key: 'spotlights', label: 'Spotlights', description: 'Focused downlighting', price: '+$300', image: spotlightsImg },
-      { key: 'ceilingFan', label: 'Ceiling Fan', description: 'Circulate air and stay cool', price: '+$350', image: ceilingFanImg },
+      { key: 'ledStrips', label: 'LED Strip Lighting', description: 'Ambient beam lighting', price: '+A$400', image: ledStripsImg },
+      { key: 'spotlights', label: 'Spotlights', description: 'Focused downlighting', price: '+A$300', image: spotlightsImg },
+      { key: 'ceilingFan', label: 'Ceiling Fan', description: 'Circulate air and stay cool', price: '+A$350', image: ceilingFanImg },
     ];
 
     return (
