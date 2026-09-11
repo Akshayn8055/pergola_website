@@ -1,7 +1,7 @@
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Mail, Plus, Settings } from "lucide-react";
+import { Mail, Plus } from "lucide-react";
 import { BUSINESS_CONFIG } from "@/lib/businessConfig";
 
 export function TopNavbar() {
@@ -28,7 +28,7 @@ export function TopNavbar() {
       </div>
       <div className="flex items-center gap-2">
         <Button asChild size="sm" className="gap-2">
-          <Link to="/configurator">
+          <Link to={`/configurator?new=${Date.now()}`}>
             <Plus className="h-4 w-4" /> New Design
           </Link>
         </Button>
@@ -36,11 +36,6 @@ export function TopNavbar() {
           <a href={`mailto:${BUSINESS_CONFIG.contactEmail}`}>
             <Mail className="h-4 w-4" />
           </a>
-        </Button>
-        <Button asChild variant="ghost" size="icon" className="h-9 w-9" title="Admin">
-          <Link to="/admin">
-            <Settings className="h-4 w-4" />
-          </Link>
         </Button>
       </div>
     </header>

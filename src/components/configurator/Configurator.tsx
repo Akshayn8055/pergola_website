@@ -14,6 +14,7 @@ export const Configurator = () => {
   const [searchParams] = useSearchParams();
   const editQuoteId = searchParams.get('quote_id');
   const editToken = searchParams.get('token');
+  const newDesignKey = searchParams.get('new');
   const [editMode, setEditMode] = useState(false);
   const sceneRef = useRef<Scene3DHandle>(null);
   const {
@@ -29,6 +30,13 @@ export const Configurator = () => {
     resetConfigurator,
     loadFromQuote,
   } = useConfigurator();
+
+  useEffect(() => {
+    if (newDesignKey && !editQuoteId && !editToken) {
+      resetConfigurator();
+      setEditMode(false);
+    }
+  }, [newDesignKey, editQuoteId, editToken, resetConfigurator]);
 
   // Load quote for editing
   useEffect(() => {

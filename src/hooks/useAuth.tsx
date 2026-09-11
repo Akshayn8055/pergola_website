@@ -7,7 +7,7 @@ type AuthContextType = {
   user: User | null;
   isAdmin: boolean;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null; isAdmin: boolean }>;
   signOut: () => Promise<void>;
 };
 
@@ -26,7 +26,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", userId)
       .eq("role", "admin")
       .maybeSingle();
-    setIsAdmin(!!data);
+    const admin = !!data;
+    setIsAdmin(admin);
+    return admin;
   };
 
   useEffect(() => {
@@ -59,8 +61,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error || !data.user) {
+      setLoading(false);
+      return { error: error?.message ?? "Login failed", isAdmin: false };
+    }
+
+    setSession(data.session);
+    setUser(data.user);
+    const admin = await checkAdmin(data.user.id);
+    setLoading(false);
+    return { error: null, isAdmin: admin };
   };
 
   const signOut = async () => {

@@ -1,5 +1,6 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { Loader2 } from "lucide-react";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { Loader2, ShieldAlert } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 export function ProtectedRoute({
@@ -25,7 +26,20 @@ export function ProtectedRoute({
   }
 
   if (requireAdmin && !isAdmin) {
-    return <Navigate to="/" replace />;
+    return (
+      <main className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
+        <div className="w-full max-w-md rounded-lg border bg-card p-8 text-center shadow-sm">
+          <ShieldAlert className="mx-auto mb-4 h-10 w-10 text-destructive" />
+          <h1 className="text-2xl font-bold">Admin Access Required</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            You are signed in, but this account is not marked as an admin in Supabase.
+          </p>
+          <Button asChild className="mt-6">
+            <Link to="/admin/login">Back to Staff Login</Link>
+          </Button>
+        </div>
+      </main>
+    );
   }
 
   return <>{children}</>;

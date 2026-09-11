@@ -41,6 +41,16 @@ Create the admin user in Supabase Authentication:
 6. Mark the email as confirmed
 7. Run the production migration after the user exists
 
+If staff login accepts the password but returns to the homepage or says admin access is missing, the auth user exists but the admin role row is missing. Run this in Supabase SQL Editor:
+
+```sql
+INSERT INTO public.user_roles (user_id, role)
+SELECT id, 'admin'::public.app_role
+FROM auth.users
+WHERE email = 'neel@scaleaura.info'
+ON CONFLICT (user_id, role) DO NOTHING;
+```
+
 ## Gmail / Google Workspace SMTP
 
 For the simplest no-paid-API email setup, use a Google Workspace app password.

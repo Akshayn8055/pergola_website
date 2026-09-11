@@ -62,8 +62,14 @@ export default function CustomerEstimate() {
       if (quote.pdf_url) {
         window.open(quote.pdf_url, "_blank");
       } else {
-        await generateQuotePDF(quote, token || undefined);
-        toast({ title: "PDF generated and downloading" });
+        const pdfUrl = await generateQuotePDF(quote, token || undefined);
+        if (pdfUrl) {
+          setQuote({ ...quote, pdf_url: pdfUrl });
+          window.open(pdfUrl, "_blank");
+          toast({ title: "PDF generated" });
+        } else {
+          toast({ title: "PDF generation failed", variant: "destructive" });
+        }
       }
     } catch {
       toast({ title: "PDF generation failed", variant: "destructive" });
