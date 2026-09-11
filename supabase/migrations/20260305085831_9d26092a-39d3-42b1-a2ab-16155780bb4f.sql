@@ -1,0 +1,18 @@
+ALTER TABLE public.quotes
+  ADD COLUMN IF NOT EXISTS roof_type text,
+  ADD COLUMN IF NOT EXISTS panels jsonb,
+  ADD COLUMN IF NOT EXISTS lighting jsonb,
+  ADD COLUMN IF NOT EXISTS frame_color text,
+  ADD COLUMN IF NOT EXISTS roof_color text,
+  ADD COLUMN IF NOT EXISTS mounting text,
+  ADD COLUMN IF NOT EXISTS mounted_side text,
+  ADD COLUMN IF NOT EXISTS pergola_type text,
+  ADD COLUMN IF NOT EXISTS automation text,
+  ADD COLUMN IF NOT EXISTS louvered_angle numeric,
+  ADD COLUMN IF NOT EXISTS retractable_openness numeric,
+  ADD COLUMN IF NOT EXISTS notes text,
+  ADD COLUMN IF NOT EXISTS base_price numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS roof_price numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS panel_price numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS lighting_price numeric DEFAULT 0,
+  ADD COLUMN IF NOT EXISTS total_price numeric DEFAULT 0;

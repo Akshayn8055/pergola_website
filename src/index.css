@@ -1,0 +1,191 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@layer base {
+  :root {
+    --background: 220 15% 98%;
+    --foreground: 220 25% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 12%;
+
+    --primary: 220 80% 52%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 12% 94%;
+    --secondary-foreground: 220 25% 18%;
+
+    --muted: 220 12% 94%;
+    --muted-foreground: 220 12% 46%;
+
+    --accent: 158 64% 42%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 14% 90%;
+    --input: 220 14% 90%;
+    --ring: 220 80% 52%;
+
+    --radius: 0.625rem;
+
+    /* Configurator specific tokens */
+    --surface: 220 15% 98%;
+    --surface-elevated: 0 0% 100%;
+    --configurator-bg: 220 25% 12%;
+    --configurator-panel: 0 0% 100%;
+    --configurator-accent: 35 90% 55%;
+    --wood-primary: 30 50% 45%;
+    --wood-secondary: 25 40% 35%;
+    --metal-dark: 220 15% 20%;
+    --metal-light: 220 10% 75%;
+
+    /* Enhanced shadows */
+    --shadow-sm: 0 1px 2px 0 hsl(220 25% 12% / 0.04);
+    --shadow-md: 0 4px 6px -1px hsl(220 25% 12% / 0.06), 0 2px 4px -2px hsl(220 25% 12% / 0.04);
+    --shadow-lg: 0 10px 15px -3px hsl(220 25% 12% / 0.08), 0 4px 6px -4px hsl(220 25% 12% / 0.04);
+    --shadow-xl: 0 20px 25px -5px hsl(220 25% 12% / 0.08), 0 8px 10px -6px hsl(220 25% 12% / 0.04);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 25% 18%;
+    --sidebar-primary: 220 80% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 12% 96%;
+    --sidebar-accent-foreground: 220 25% 18%;
+    --sidebar-border: 220 14% 92%;
+    --sidebar-ring: 220 80% 52%;
+  }
+
+  .dark {
+    --background: 220 25% 6%;
+    --foreground: 220 10% 96%;
+
+    --card: 220 25% 10%;
+    --card-foreground: 220 10% 96%;
+
+    --popover: 220 25% 10%;
+    --popover-foreground: 220 10% 96%;
+
+    --primary: 220 75% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 220 20% 16%;
+    --secondary-foreground: 220 10% 92%;
+
+    --muted: 220 20% 16%;
+    --muted-foreground: 220 10% 58%;
+
+    --accent: 158 60% 48%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 18%;
+    --input: 220 20% 18%;
+    --ring: 220 75% 60%;
+
+    /* Configurator specific tokens - dark mode */
+    --surface: 220 25% 8%;
+    --surface-elevated: 220 25% 12%;
+    --configurator-bg: 220 25% 6%;
+    --configurator-panel: 220 25% 10%;
+    --configurator-accent: 35 90% 55%;
+
+    /* Enhanced shadows - dark mode */
+    --shadow-sm: 0 1px 2px 0 hsl(0 0% 0% / 0.2);
+    --shadow-md: 0 4px 6px -1px hsl(0 0% 0% / 0.25), 0 2px 4px -2px hsl(0 0% 0% / 0.15);
+    --shadow-lg: 0 10px 15px -3px hsl(0 0% 0% / 0.3), 0 4px 6px -4px hsl(0 0% 0% / 0.2);
+    --shadow-xl: 0 20px 25px -5px hsl(0 0% 0% / 0.35), 0 8px 10px -6px hsl(0 0% 0% / 0.25);
+
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 220 10% 92%;
+    --sidebar-primary: 220 75% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 20% 14%;
+    --sidebar-accent-foreground: 220 10% 92%;
+    --sidebar-border: 220 20% 16%;
+    --sidebar-ring: 220 75% 60%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  }
+}
+
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 5px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 9999px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+  }
+
+  /* Professional glass effect */
+  .glass {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+
+  /* Refined focus ring */
+  .focus-ring {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@keyframes scan {
+  0% { top: 0; }
+  50% { top: 100%; }
+  100% { top: 0; }
+}
+
+.animate-scan {
+  animation: scan 2.5s ease-in-out infinite;
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
