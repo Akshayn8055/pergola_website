@@ -50,6 +50,18 @@ export default function CustomerEstimate() {
       });
     } catch {}
 
+    supabase.functions.invoke("ghl-webhook", {
+      body: {
+        event: action === "confirm" ? "quote_confirmed" : "quote_declined",
+        quote_id: quote.id,
+        status: action === "confirm" ? "confirmed" : "declined",
+        customer_name: quote.customer_name,
+        customer_email: quote.customer_email,
+        customer_phone: quote.customer_phone,
+        price: quote.total_price || quote.price,
+      },
+    }).catch(() => {});
+
     setResponded(action === "confirm" ? "confirmed" : "declined");
     setActioning(false);
     toast({ title: action === "confirm" ? "Quote confirmed! We'll be in touch." : "Quote declined." });

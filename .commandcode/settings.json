@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Shell(npm:*)"
+      "Shell(npm:*)",
+      "powershell",
+      "Shell(type:*)",
+      "Shell(mkdir \"C:\\Users\\akshay\\Documents\\GitHub\\pergola_website\\.commandcode\\tmp\" 2>nul & copy \"C:\\Users\\akshay\\Downloads\\Sydney Outdoor Solutions\\public\\sample-quote.pdf\" \"C:\\Users\\akshay\\Documents\\GitHub\\pergola_website\\.commandcode\\tmp\\sample-quote.pdf\")",
+      "Shell(pdftotext:*)",
+      "Shell(supabase:*)"
     ],
     "deny": [],
     "defaultMode": "default"

@@ -233,7 +233,7 @@ export default function AdminDashboard() {
             <div className="grid gap-6 xl:grid-cols-[1fr_320px]">
               <div className="space-y-6">
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="mb-4 font-semibold">Customer</h3>
+                  <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">Customer</h3>
                   <div className="grid gap-3 text-sm md:grid-cols-2">
                     <Info label="Name" value={selectedQuote.customer_name} />
                     <Info label="Email" value={selectedQuote.customer_email} />
@@ -245,7 +245,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="mb-4 font-semibold">Project</h3>
+                  <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">Project</h3>
                   <div className="grid gap-3 text-sm md:grid-cols-2">
                     <Info label="Structure" value={selectedQuote.structure_type} />
                     <Info label="Pergola Type" value={selectedQuote.pergola_type || selectedQuote.style} />
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="mb-4 font-semibold">Pricing</h3>
+                  <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pricing</h3>
                   <div className="space-y-2 text-sm">
                     <Price label="Base" value={selectedQuote.base_price} />
                     <Price label="Roof" value={selectedQuote.roof_price} />
@@ -272,7 +272,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="mb-4 font-semibold">Activity Notes</h3>
+                  <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">Activity Notes</h3>
                   <div className="flex gap-2">
                     <Textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Add a follow-up note" />
                     <Button onClick={saveNote} disabled={!note.trim()}>Add</Button>
@@ -290,7 +290,7 @@ export default function AdminDashboard() {
                 <div className="rounded-lg border bg-card p-5">
                   <div className="mb-4 flex items-center justify-between gap-3">
                     <div>
-                      <h3 className="font-semibold">Pricing Settings</h3>
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Pricing Settings</h3>
                       <p className="text-sm text-muted-foreground">Rates are AUD and update future configurator estimates.</p>
                     </div>
                     <div className="flex gap-2">
@@ -313,7 +313,7 @@ export default function AdminDashboard() {
 
               <aside className="space-y-6">
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="mb-4 font-semibold">Workflow</h3>
+                  <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">Workflow</h3>
                   <div className="space-y-4">
                     <div>
                       <label className="mb-2 block text-sm font-medium">Quote Status</label>
@@ -337,7 +337,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="rounded-lg border bg-card p-5">
-                  <h3 className="mb-4 font-semibold">Design Preview</h3>
+                  <h3 className="mb-4 text-sm font-semibold text-muted-foreground uppercase tracking-wider">Design Preview</h3>
                   {selectedQuote.design_image ? (
                     <a href={selectedQuote.design_image} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-md border">
                       <img src={selectedQuote.design_image} alt="Design preview" className="aspect-video w-full object-cover" />
