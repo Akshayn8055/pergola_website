@@ -73,141 +73,149 @@ export const QuoteFormDialog = ({ open, onOpenChange, config, pricing, onCapture
 
     setIsSubmitting(true);
 
-    const designImage = onCaptureDesign ? onCaptureDesign() : null;
-    const priceBreakdown = calculatePriceBreakdown(config, pricing);
-    const avgPrice = (config.estimatedPrice.min + config.estimatedPrice.max) / 2;
+    try {
+      const designImage = onCaptureDesign ? onCaptureDesign() : null;
+      const priceBreakdown = calculatePriceBreakdown(config, pricing);
+      const avgPrice = (config.estimatedPrice.min + config.estimatedPrice.max) / 2;
 
-    const configFields = {
-      roof_type: config.pergola?.roofType || null,
-      panels: config.structureType === 'deck'
-        ? { __deck: config.deck }
-        : { ...(config.pergola?.panels || {}), ...(config.structureType === 'combo' ? { __deck: config.deck } : {}) },
-      lighting: config.pergola?.lighting || null,
-      frame_color: config.pergola?.frameColor || null,
-      roof_color: config.pergola?.roofColor || null,
-      mounting: config.pergola?.mounting || null,
-      mounted_side: config.pergola?.mountedSide || null,
-      pergola_type: config.pergola?.type || null,
-      automation: config.pergola?.automation || null,
-      louvered_angle: config.pergola?.louveredAngle ?? null,
-      retractable_openness: config.pergola?.retractableOpenness ?? null,
-      notes: formData.description || null,
-      base_price: priceBreakdown.base_price,
-      roof_price: priceBreakdown.roof_price,
-      panel_price: priceBreakdown.panel_price,
-      lighting_price: priceBreakdown.lighting_price,
-      total_price: priceBreakdown.total_price,
-    };
+      const configFields = {
+        roof_type: config.pergola?.roofType || null,
+        panels: config.structureType === 'deck'
+          ? { __deck: config.deck }
+          : { ...(config.pergola?.panels || {}), ...(config.structureType === 'combo' ? { __deck: config.deck } : {}) },
+        lighting: config.pergola?.lighting || null,
+        frame_color: config.pergola?.frameColor || null,
+        roof_color: config.pergola?.roofColor || null,
+        mounting: config.pergola?.mounting || null,
+        mounted_side: config.pergola?.mountedSide || null,
+        pergola_type: config.pergola?.type || null,
+        automation: config.pergola?.automation || null,
+        louvered_angle: config.pergola?.louveredAngle ?? null,
+        retractable_openness: config.pergola?.retractableOpenness ?? null,
+        notes: formData.description || null,
+        base_price: priceBreakdown.base_price,
+        roof_price: priceBreakdown.roof_price,
+        panel_price: priceBreakdown.panel_price,
+        lighting_price: priceBreakdown.lighting_price,
+        total_price: priceBreakdown.total_price,
+      };
 
-    let savedQuote: any = null;
+      let savedQuote: any = null;
 
-    if (editMode && editQuoteId) {
-      // Update existing quote
-      const updatePayload = {
-        customer_name: formData.name,
-        customer_email: formData.email,
-        customer_address: formData.address || null,
-        customer_phone: formData.phone,
-        order_description: config.structureType === 'deck' ? `Custom Deck – ${config.deck.shape}` : `${config.structureType} – ${config.pergola?.type || "custom"}`,
-        price: avgPrice,
-        budget: formData.budget || null,
-        timeline: formData.timeline || null,
-        structure_type: config.structureType || null,
-        dimensions: `${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.length / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.width / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.height / 1000).toFixed(2)}m`,
-        material: config.structureType === 'deck' ? config.deck.material : config.pergola?.material || null,
-        style: config.structureType === 'deck' ? config.deck.shape : config.pergola?.type || null,
-        ...configFields,
-      } as any;
-      savedQuote = editToken
-        ? await updateQuoteByToken(editQuoteId, editToken, updatePayload)
-        : await updateQuote(editQuoteId, updatePayload);
-    } else {
-      // Create new quote
-      const quoteNumber = await getNextQuoteNumber();
-      savedQuote = await createQuote({
-        quote_number: quoteNumber,
-        customer_name: formData.name,
-        customer_email: formData.email,
-        customer_address: formData.address || null,
-        customer_phone: formData.phone,
-        sales_rep: null,
-        sales_rep_email: null,
-        order_description: config.structureType === 'deck' ? `Custom Deck – ${config.deck.shape}` : `${config.structureType} – ${config.pergola?.type || "custom"}`,
-        price: avgPrice,
-        status: "Quote",
-        is_hot: false,
-        is_viewed: false,
-        is_sent: false,
-        is_archived: false,
-        is_draft: false,
-        budget: formData.budget || null,
-        timeline: formData.timeline || null,
-        email_consent: true,
-        structure_type: config.structureType || null,
-        dimensions: `${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.length / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.width / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.height / 1000).toFixed(2)}m`,
-        material: config.structureType === 'deck' ? config.deck.material : config.pergola?.material || null,
-        style: config.structureType === 'deck' ? config.deck.shape : config.pergola?.type || null,
-        design_image: designImage,
-        ...configFields,
-      } as any);
-    }
-
-    // Upload design image
-    if (savedQuote && designImage) {
-      const imageUrl = await uploadDesignImage(savedQuote.id, designImage);
-      if (imageUrl) {
-        if (savedQuote.edit_token) {
-          await updateQuoteByToken(savedQuote.id, savedQuote.edit_token, { design_image: imageUrl } as any);
-        } else {
-          await updateQuote(savedQuote.id, { design_image: imageUrl } as any);
-        }
-        savedQuote.design_image = imageUrl;
+      if (editMode && editQuoteId) {
+        // Update existing quote
+        const updatePayload = {
+          customer_name: formData.name,
+          customer_email: formData.email,
+          customer_address: formData.address || null,
+          customer_phone: formData.phone,
+          order_description: config.structureType === 'deck' ? `Custom Deck – ${config.deck.shape}` : `${config.structureType} – ${config.pergola?.type || "custom"}`,
+          price: avgPrice,
+          budget: formData.budget || null,
+          timeline: formData.timeline || null,
+          structure_type: config.structureType || null,
+          dimensions: `${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.length / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.width / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.height / 1000).toFixed(2)}m`,
+          material: config.structureType === 'deck' ? config.deck.material : config.pergola?.material || null,
+          style: config.structureType === 'deck' ? config.deck.shape : config.pergola?.type || null,
+          ...configFields,
+        } as any;
+        savedQuote = editToken
+          ? await updateQuoteByToken(editQuoteId, editToken, updatePayload)
+          : await updateQuote(editQuoteId, updatePayload);
+      } else {
+        // Create new quote
+        const quoteNumber = await getNextQuoteNumber();
+        savedQuote = await createQuote({
+          quote_number: quoteNumber,
+          customer_name: formData.name,
+          customer_email: formData.email,
+          customer_address: formData.address || null,
+          customer_phone: formData.phone,
+          sales_rep: null,
+          sales_rep_email: null,
+          order_description: config.structureType === 'deck' ? `Custom Deck – ${config.deck.shape}` : `${config.structureType} – ${config.pergola?.type || "custom"}`,
+          price: avgPrice,
+          status: "Quote",
+          is_hot: false,
+          is_viewed: false,
+          is_sent: false,
+          is_archived: false,
+          is_draft: false,
+          budget: formData.budget || null,
+          timeline: formData.timeline || null,
+          email_consent: true,
+          structure_type: config.structureType || null,
+          dimensions: `${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.length / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.width / 1000).toFixed(2)}m × ${((config.structureType === 'deck' ? config.deck : config.pergola).dimensions.height / 1000).toFixed(2)}m`,
+          material: config.structureType === 'deck' ? config.deck.material : config.pergola?.material || null,
+          style: config.structureType === 'deck' ? config.deck.shape : config.pergola?.type || null,
+          design_image: designImage,
+          ...configFields,
+        } as any);
       }
-    }
 
-    // Generate PDF
-    if (savedQuote) {
+      if (!savedQuote) {
+        throw new Error("We couldn't save your quote. Please try again.");
+      }
+
+      // Upload design image
+      if (designImage) {
+        const imageUrl = await uploadDesignImage(savedQuote.id, designImage);
+        if (imageUrl) {
+          if (savedQuote.edit_token) {
+            await updateQuoteByToken(savedQuote.id, savedQuote.edit_token, { design_image: imageUrl } as any);
+          } else {
+            await updateQuote(savedQuote.id, { design_image: imageUrl } as any);
+          }
+          savedQuote.design_image = imageUrl;
+        }
+      }
+
+      // Generate PDF
       try {
         const pdfUrl = await generateQuotePDF(savedQuote, savedQuote.edit_token || undefined);
         if (pdfUrl) savedQuote.pdf_url = pdfUrl;
       } catch (err) {
         console.error("PDF generation failed:", err);
       }
-    }
 
-    // Send transactional emails through the Supabase email function.
-    if (savedQuote) {
-      try {
-        const estimateUrl = `${window.location.origin}/estimate/${savedQuote.id}?token=${savedQuote.edit_token}`;
-        await supabase.functions.invoke("send-email", {
-          body: {
-            event: editMode ? "quote_updated" : "quote_created",
-            quote: savedQuote,
-            estimate_url: estimateUrl,
-          },
-        });
-      } catch (err) {
+      // Send transactional emails through the Supabase email function without blocking submission.
+      const estimateUrl = `${window.location.origin}/estimate/${savedQuote.id}?token=${savedQuote.edit_token}`;
+      supabase.functions.invoke("send-email", {
+        body: {
+          event: editMode ? "quote_updated" : "quote_created",
+          quote: savedQuote,
+          estimate_url: estimateUrl,
+        },
+      }).catch((err) => {
         console.error("Email notification failed:", err);
+      });
+
+      toast({
+        title: editMode ? "Quote Updated!" : "Quote Request Submitted!",
+        description: editMode
+          ? "Your design has been updated successfully."
+          : "We'll get back to you within 24-48 hours with your personalized quote.",
+      });
+
+      onOpenChange(false);
+
+      // If editing, redirect back to estimate
+      if (editMode && editQuoteId && editToken) {
+        window.location.href = `/estimate/${editQuoteId}?token=${editToken}`;
+        return;
       }
+
+      setFormData({ name: '', phone: '', email: '', postcode: '', address: '', projectType: '', budget: '', timeline: '', description: '' });
+    } catch (error) {
+      console.error("Quote submission failed:", error);
+      toast({
+        title: "Something went wrong",
+        description: error instanceof Error ? error.message : "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-
-    toast({
-      title: editMode ? "Quote Updated!" : "Quote Request Submitted!",
-      description: editMode
-        ? "Your design has been updated successfully."
-        : "We'll get back to you within 24-48 hours with your personalized quote.",
-    });
-
-    setIsSubmitting(false);
-    onOpenChange(false);
-
-    // If editing, redirect back to estimate
-    if (editMode && editQuoteId && editToken) {
-      window.location.href = `/estimate/${editQuoteId}?token=${editToken}`;
-      return;
-    }
-
-    setFormData({ name: '', phone: '', email: '', postcode: '', address: '', projectType: '', budget: '', timeline: '', description: '' });
   };
 
   const formatDimension = (mm: number) => `${(mm / 1000).toFixed(2)}m`;
